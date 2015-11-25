@@ -1,32 +1,12 @@
-Directories:
+Implementations detail.
 
-+ FreeRTOS/source contains the FreeRTOS real time kernel source code.
+No changes to original FreeRTOS code was made.
+Directories was reorganized to move all changed or optional items outside the original, copied code.
+That way just copying new version of FreeRTOS should give functional code.
 
-+ FreeRTOS/demo contains a pre-configured demo project for every official 
-  FreeRTOS port.
-  
-+ See http://www.freertos.org/a00017.html for full details of the FreeRTOS
-  directory structure and information on locating the files you require.
-
-  + FreeRTOS-Plus contains additional FreeRTOS components and third party 
-  complementary products.  THESE ARE LICENSED SEPARATELY FROM FreeRTOS although
-  all contain open source options.  See the license files in each respective
-  directory for information.
-  
-+ FreeRTOS-Plus/Demo contains pre-configured demo projects for the FreeRTOS-Plus 
-  components.  Most demo projects run in a Windows environment using the 
-  FreeRTOS windows simulator.  These are documented on the FreeRTOS web site 
-  http://www.FreeRTOS.org/plus
-
-Further readme files are contains in sub-directories as appropriate.
-  
-The easiest way to use FreeRTOS is to start with one of the pre-configured demo 
-application projects (found in the FreeRTOS/Demo directory).  That way you will
-have the correct FreeRTOS source files included, and the correct include paths
-configured.  Once a demo application is building and executing you can remove
-the demo application file, and start to add in your own application source
-files.
-
-See also -
-http://www.freertos.org/FreeRTOS-quick-start-guide.html
-http://www.freertos.org/FAQHelp.html
+Folders:
+- source:  Original Source directory from FreeRTOS. Deleted all port files from portable subdirectory.
+           In portable subdirectory only MemMang was left.
+- license: Original License directory from FreeRTOS.
+- config:  Base (clean) FreeRTOS configuration file.
+- portable: Port files created for nrf5x microcontroller.
