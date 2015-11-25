@@ -368,7 +368,7 @@ uint32_t ulPreviousMask;
  */
 void prvSetupTimerInterrupt( void )
 {
-#if 0
+#if 1
   NRF_RTC0->PRESCALER = ( configCPU_CLOCK_HZ / configTICK_RATE_HZ ) - 1;
   NVIC_SetPriority(RTC0_IRQn, 3);
   NRF_RTC0->INTENSET = RTC_INTENSET_TICK_Msk;
