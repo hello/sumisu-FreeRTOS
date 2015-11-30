@@ -1,4 +1,5 @@
-
+/*
+ */
 #include <string.h>
 #include "cmsis_os.h"
 #include "FreeRTOS.h"
@@ -104,7 +105,7 @@ int32_t osKernelRunning(void)
  * @retval thread ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osThreadCreate shall be consistent in every CMSIS-RTOS.
  */
-osThreadId osThreadCreate (osThreadDef_t *thread_def, void *argument)
+osThreadId osThreadCreate (const osThreadDef_t *thread_def, void *argument)
 {
     xTaskHandle handle;
     
@@ -220,7 +221,7 @@ osEvent osWait (uint32_t millisec);
  * @retval  timer ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osTimerCreate shall be consistent in every CMSIS-RTOS.
  */
-osTimerId osTimerCreate (osTimerDef_t *timer_def, os_timer_type type, void *argument)
+osTimerId osTimerCreate (const osTimerDef_t *timer_def, os_timer_type type, void *argument)
 {
 #if (configUSE_TIMERS == 1)
     return xTimerCreate((const signed char *)"",
@@ -372,7 +373,7 @@ osEvent osSignalWait (int32_t signals, uint32_t millisec);
  * @retval  mutex ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osMutexCreate shall be consistent in every CMSIS-RTOS.
  */
-osMutexId osMutexCreate (osMutexDef_t *mutex_def)
+osMutexId osMutexCreate (const osMutexDef_t *mutex_def)
 {
     return xSemaphoreCreateMutex();
 }
@@ -460,7 +461,7 @@ osStatus osMutexDelete (osMutexId mutex_id)
  * @retval  semaphore ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osSemaphoreCreate shall be consistent in every CMSIS-RTOS.
  */
-osSemaphoreId osSemaphoreCreate (osSemaphoreDef_t *semaphore_def, int32_t count)
+osSemaphoreId osSemaphoreCreate (const osSemaphoreDef_t *semaphore_def, int32_t count)
 {
     (void) semaphore_def;
     osSemaphoreId sema;
@@ -577,7 +578,7 @@ typedef struct os_pool_cb {
  * @retval  memory pool ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osPoolCreate shall be consistent in every CMSIS-RTOS.
  */
-osPoolId osPoolCreate (osPoolDef_t *pool_def)
+osPoolId osPoolCreate (const osPoolDef_t *pool_def)
 {
     osPoolId thePool;
     int itemSize = 4 * ((pool_def->item_sz + 3) / 4);
@@ -729,7 +730,7 @@ osStatus osPoolFree (osPoolId pool_id, void *block)
  * @retval  message queue ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osMessageCreate shall be consistent in every CMSIS-RTOS.
  */
-osMessageQId osMessageCreate (osMessageQDef_t *queue_def, osThreadId thread_id)
+osMessageQId osMessageCreate (const osMessageQDef_t *queue_def, osThreadId thread_id)
 {
     (void) thread_id;
     
@@ -845,7 +846,7 @@ typedef struct os_mailQ_cb {
  * @retval mail queue ID for reference by other functions or NULL in case of error.
  * @note   MUST REMAIN UNCHANGED: \b osMailCreate shall be consistent in every CMSIS-RTOS.
  */
-osMailQId osMailCreate (osMailQDef_t *queue_def, osThreadId thread_id)
+osMailQId osMailCreate (const osMailQDef_t *queue_def, osThreadId thread_id)
 {
     (void) thread_id;
     
@@ -1097,10 +1098,11 @@ osStatus osThreadResumeAll (void)
 osStatus osThreadIsSuspended(osThreadId thread_id)
 {
 #if (INCLUDE_vTaskSuspend == 1)
-    if (xTaskIsTaskSuspended(thread_id) != pdFALSE)
+    if (eTaskGetState(thread_id)  == eSuspended){
         return osOK;
-    else
+    }else{
         return osErrorOS;
+    }
 #else
     return osErrorResource;
 #endif
