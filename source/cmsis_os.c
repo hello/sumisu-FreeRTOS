@@ -332,6 +332,24 @@ osStatus osTimerStop (osTimerId timer_id)
 #endif
     return result;
 }
+/**
+ * @brief  Stop a timer.
+ * @param  timer_id      timer ID obtained by \ref osTimerCreate
+ * @retval  status code that indicates the execution status of the function.
+ * @note   MUST REMAIN UNCHANGED: \b osTimerStop shall be consistent in every CMSIS-RTOS.
+ */
+osStatus osTimerDelete (osTimerId timer_id){
+    osStatus result = osOK;
+#if (configUSE_TIMERS == 1)
+    if(pdFAIL == xTimerDelete(timer_id, portMAX_DELAY)){
+        result = osErrorOS;
+    }
+#else
+    result = osErrorOS;
+#endif
+    return result;
+
+}
 
 /***************************  Signal Management ********************************/
 /**
