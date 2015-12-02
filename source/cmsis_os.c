@@ -854,11 +854,11 @@ osEvent osMessageGet (osMessageQId queue_id, uint32_t millisec)
 #if (defined (osFeature_MailQ)  &&  (osFeature_MailQ != 0))  /* Use Mail Queues */
 
 
-typedef struct os_mailQ_cb {
-    osMailQDef_t *queue_def;
+struct os_mailQ_cb{
+    osMailQDef_t queue_def;
     xQueueHandle handle;
-    osPoolId pool;
-} os_mailQ_cb_t;
+    SemaphoreHandle_t count;
+};
 
 /**
  * @brief Create and Initialize mail queue
@@ -869,34 +869,28 @@ typedef struct os_mailQ_cb {
  */
 osMailQId osMailCreate (const osMailQDef_t *queue_def, osThreadId thread_id)
 {
-    (void) thread_id;
     
-    osPoolDef_t pool_def = {queue_def->queue_sz, queue_def->item_sz};
-    
-    
-    /* Create a mail queue control block */
-    *(queue_def->cb) = pvPortMalloc(sizeof(struct os_mailQ_cb));
-    if (*(queue_def->cb) == NULL) {
+    struct os_mailQ_cb * ret = pvPortMalloc(sizeof(*ret));
+    if(!ret){
         return NULL;
     }
-    (*(queue_def->cb))->queue_def = queue_def;
+    ret->queue_def = *queue_def;
     
     /* Create a queue in FreeRTOS */
-    (*(queue_def->cb))->handle = xQueueCreate(queue_def->queue_sz, sizeof(void *));
-    if ((*(queue_def->cb))->handle == NULL) {
-        vPortFree(*(queue_def->cb));
+    ret->handle = xQueueCreate(queue_def->queue_sz, sizeof(void *));
+    if ( !ret->handle ){
+        vPortFree(ret);
         return NULL;
     }
+
+    ret->count = xSemaphoreCreateCounting(queue_def->queue_sz, queue_def->queue_sz);
     
-    /* Create a mail pool */
-    (*(queue_def->cb))->pool = osPoolCreate(&pool_def);
-    if ((*(queue_def->cb))->pool == NULL) {
-        //TODO: Delete queue. How to do it in FreeRTOS?
-        vPortFree(*(queue_def->cb));
+    if( !ret->count ){
+        vQueueDelete(ret->handle);
+        vPortFree(ret);
         return NULL;
     }
-    
-    return *(queue_def->cb);
+    return ret;
 }
 
 /**
@@ -908,17 +902,26 @@ osMailQId osMailCreate (const osMailQDef_t *queue_def, osThreadId thread_id)
  */
 void *osMailAlloc (osMailQId queue_id, uint32_t millisec)
 {
-    (void) millisec;
-    void *p;
-    
-    
     if (queue_id == NULL) {
         return NULL;
+    }else{
+        BaseType_t que;
+        BaseType_t ret;
+        portTickType ticks = millisec / portTICK_RATE_MS;
+        if (ticks == 0) {
+            ticks = 1;
+        }
+        if (inHandlerMode()) {
+            ret = xSemaphoreTakeFromISR(queue_id->count, &que);
+        }else{
+            ret = xSemaphoreTake(queue_id->count, ticks);
+        }
+        if (pdTRUE == ret ){
+            return pvPortMalloc(queue_id->queue_def.item_sz);
+        }else{
+            return NULL;
+        }
     }
-    
-    p = osPoolAlloc(queue_id->pool);
-    
-    return p;
 }
 
 /**
@@ -932,13 +935,7 @@ void *osMailCAlloc (osMailQId queue_id, uint32_t millisec)
 {
     uint32_t i;
     void *p = osMailAlloc(queue_id, millisec);
-    
-    if (p) {
-        for (i = 0; i < sizeof(queue_id->queue_def->item_sz); i++) {
-            ((uint8_t *)p)[i] = 0;
-        }
-    }
-    
+    memset(p, 0, queue_id->queue_def.item_sz);
     return p;
 }
 
@@ -1040,11 +1037,24 @@ osEvent osMailGet (osMailQId queue_id, uint32_t millisec)
  */
 osStatus osMailFree (osMailQId queue_id, void *mail)
 {
-    if (queue_id == NULL) {
+    BaseType_t que;
+    BaseType_t ret;
+    if(!queue_id){
         return osErrorParameter;
     }
-    
-    osPoolFree(queue_id->pool, mail);
+    if(!mail){
+        return osErrorParameter;
+    }
+    if (inHandlerMode()) {
+        ret = xSemaphoreGiveFromISR(queue_id->count, &que);
+    }else{
+        ret = xSemaphoreGive(queue_id->count);
+    }
+    if (pdTRUE == ret ){
+        vPortFree(mail);
+    }else{
+        return osErrorOS;
+    }
     
     return osOK;
 }
