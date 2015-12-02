@@ -108,14 +108,17 @@ int32_t osKernelRunning(void)
 osThreadId osThreadCreate (const osThreadDef_t *thread_def, void *argument)
 {
     xTaskHandle handle;
+    BaseType_t rc;
     
     
-    xTaskCreate((pdTASK_CODE)thread_def->pthread,
+    if( pdPASS != ( rc = xTaskCreate((pdTASK_CODE)thread_def->pthread,
                 (const signed portCHAR *)thread_def->name,
                 thread_def->stacksize,
                 argument,
                 makeFreeRtosPriority(thread_def->tpriority),
-                &handle);
+                &handle) ) ){
+        return NULL;
+    }
     
     return handle;
 }
