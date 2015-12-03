@@ -907,9 +907,14 @@ void *osMailAlloc (osMailQId queue_id, uint32_t millisec)
     }else{
         BaseType_t que;
         BaseType_t ret;
-        portTickType ticks = millisec / portTICK_RATE_MS;
-        if (ticks == 0) {
-            ticks = 1;
+        portTickType ticks;
+        if (millisec == osWaitForever) {
+            ticks = portMAX_DELAY;
+        } else {
+            ticks = millisec / portTICK_RATE_MS;
+            if (ticks == 0) {
+                ticks = 1;
+            }
         }
         if (inHandlerMode()) {
             ret = xSemaphoreTakeFromISR(queue_id->count, &que);
