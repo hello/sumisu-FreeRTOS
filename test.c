@@ -18,11 +18,6 @@ static void _mytask2(void * param){
         vTaskDelay(1000);
     }
 }
-void app_error_handler(uint32_t error, uint32_t line_num, const uint8_t * file_name){
-    LOGT("OH NOES");
-    while(1);
-
-}
 void test_rtos(){
     SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_SYNTH_250_PPM, NULL);
     /*
