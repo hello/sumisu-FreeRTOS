@@ -159,6 +159,7 @@
 #define INCLUDE_xTaskGetCurrentTaskHandle                                         1
 #define INCLUDE_uxTaskGetStackHighWaterMark                                       1
 #define INCLUDE_xTaskGetIdleTaskHandle                                            1
+#define INCLUDE_pxTaskGetStackStart                                               1
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle                                    1
 #define INCLUDE_pcTaskGetTaskName                                                 1
 #define INCLUDE_eTaskGetState                                                     1
@@ -228,5 +229,7 @@ standard names - or at least those used in the unmodified vector table. */
         extern uint32_t SystemCoreClock;
     #endif
 #endif /* !assembler */
+
+#include "SEGGER_SYSVIEW_FreeRTOS.h"
 
 #endif /* FREERTOS_CONFIG_H */
